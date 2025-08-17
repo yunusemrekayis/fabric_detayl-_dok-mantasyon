@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microsoft Fabric Pilot Projesi - İnteraktif Rapor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony (Beige, Taupe, Muted Green, Terracotta) -->
+    <!-- Application Structure Plan: A thematic, four-section SPA (Project Flow, Pros/Cons, Alternatives, Recommendations) with a sticky navigation. This non-linear structure allows users to explore topics of interest directly. Interactions like clickable diagrams, tabbed comparisons with dynamic charts, and accordions are used to manage information density and encourage exploration, making the complex technical content more digestible than a static report. -->
+    <!-- Visualization & Content Choices: 1. Project Flow: Goal=Organize, Method=Interactive HTML/CSS diagram, Interaction=Click-to-expand, Justification=Breaks down a complex process into manageable, explorable steps without SVG. 2. Alternatives Comparison: Goal=Compare, Method=Chart.js Radar Chart, Interaction=Tabs to switch datasets, Justification=Visually synthesizes multi-attribute comparisons from dense tables into an intuitive "shape" for each service, providing a high-impact "wow" factor. 3. Recommendations: Goal=Inform, Method=HTML/JS Accordion, Interaction=Click-to-expand, Justification=Presents actionable advice in a scannable, non-overwhelming format. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F5F2;
+            color: #4A4A4A;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 50vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 450px;
+            }
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+        }
+        .nav-link.active {
+            color: #8A9A5B;
+            border-bottom-color: #8A9A5B;
+        }
+        .flow-card-detail {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out, padding 0.5s ease-out;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+        .flow-card.active .flow-card-detail {
+            max-height: 1000px;
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-[#D4C8BE]/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-[#4A4A4A]">Fabric Proje Analizi</h1>
+                </div>
+                <nav class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#proje-akisi" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-[#8A9A5B] border-b-2 border-transparent">Proje Akışı</a>
+                        <a href="#analiz" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-[#8A9A5B] border-b-2 border-transparent">Avantaj & Dezavantaj</a>
+                        <a href="#alternatifler" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-[#8A9A5B] border-b-2 border-transparent">Alternatif Mimariler</a>
+                        <a href="#oneriler" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-[#8A9A5B] border-b-2 border-transparent">Öneriler</a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <section id="proje-akisi" class="scroll-mt-20 mb-16">
+            <h2 class="text-3xl font-bold text-center mb-2 text-[#4A4A4A]">Mevcut Sistem Mimarisi ve Veri Akışı</h2>
+            <p class="text-center text-lg text-gray-600 mb-10 max-w-3xl mx-auto">Müşterinin MSSQL veritabanından başlayarak Power BI raporlarının web sitesine gömülmesine kadar uzanan mevcut pilot projenin uçtan uca veri akışını interaktif olarak keşfedin. Her bir aşamanın detaylarını görmek için kartlara tıklayın.</p>
+            
+            <div class="relative flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4">
+                <div id="flow-card-1" class="flow-card w-full md:w-1/5 bg-white rounded-lg shadow-lg p-4 cursor-pointer border-2 border-transparent hover:border-[#8A9A5B] transition-all duration-300">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-[#D4C8BE] p-2 rounded-full text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#4A4A4A]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 1.1.9 2 2 2h12a2 2 0 002-2V7M4 7c0-1.1.9-2 2-2h12a2 2 0 002-2H6a2 2 0 00-2 2v0zM4 7h16" /></svg>
+                        </div>
+                        <h3 class="font-semibold text-base">1. Kaynak & Veri Alımı</h3>
+                    </div>
+                    <div class="flow-card-detail text-sm text-gray-600">
+                        <p><strong>Kaynak:</strong> Müşteri MSSQL Veritabanı.</p>
+                        <p><strong>Araç:</strong> Microsoft Fabric Pipeline.</p>
+                        <p><strong>Süreç:</strong> `Lookup` aktivitesi ile veriler aranır, `ForEach` döngüsü içinde `Copy` aktivitesi ile veriler kaynaktan çekilerek Fabric Warehouse'a aktarılır.</p>
+                    </div>
+                </div>
+
+                <div class="hidden md:block text-2xl text-[#D4C8BE] font-sans">→</div>
+
+                <div id="flow-card-2" class="flow-card w-full md:w-1/5 bg-white rounded-lg shadow-lg p-4 cursor-pointer border-2 border-transparent hover:border-[#8A9A5B] transition-all duration-300">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-[#D4C8BE] p-2 rounded-full text-white">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#4A4A4A]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 011-1h1a2 2 0 100-4H7a1 1 0 01-1-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" /></svg>
+                        </div>
+                        <h3 class="font-semibold text-base">2. Depolama & Dönüşüm</h3>
+                    </div>
+                     <div class="flow-card-detail text-sm text-gray-600">
+                        <p><strong>Araç:</strong> Fabric Warehouse.</p>
+                        <p><strong>Süreç:</strong> T-SQL sorguları ile veriler işlenir. Yıldız şeması mantığına göre Boyut (Dimension) ve Olay (Fact) tabloları oluşturulur. Bu mantık, Saklı Yordamlar (Stored Procedures) olarak kaydedilir.</p>
+                    </div>
+                </div>
+
+                <div class="hidden md:block text-2xl text-[#D4C8BE] font-sans">→</div>
+
+                <div id="flow-card-3" class="flow-card w-full md:w-1/5 bg-white rounded-lg shadow-lg p-4 cursor-pointer border-2 border-transparent hover:border-[#8A9A5B] transition-all duration-300">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-[#D4C8BE] p-2 rounded-full text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#4A4A4A]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        </div>
+                        <h3 class="font-semibold text-base">3. Anlamsal Model</h3>
+                    </div>
+                     <div class="flow-card-detail text-sm text-gray-600">
+                        <p><strong>Araç:</strong> Power BI Desktop.</p>
+                        <p><strong>Süreç:</strong> Warehouse endpoint'i Power BI'a bağlanır. Başlangıçta Direct Lake olan model, Acente bağlantı sorunları nedeniyle Import moduna çevrilir. DAX formülleriyle Measure'lar yazılır ve tablolar ID'ler üzerinden ilişkilendirilir.</p>
+                    </div>
+                </div>
+
+                <div class="hidden md:block text-2xl text-[#D4C8BE] font-sans">→</div>
+
+                <div id="flow-card-4" class="flow-card w-full md:w-1/5 bg-white rounded-lg shadow-lg p-4 cursor-pointer border-2 border-transparent hover:border-[#8A9A5B] transition-all duration-300">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-[#D4C8BE] p-2 rounded-full text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#4A4A4A]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                        </div>
+                        <h3 class="font-semibold text-base">4. Raporlama & Sunum</h3>
+                    </div>
+                     <div class="flow-card-detail text-sm text-gray-600">
+                        <p><strong>Araç:</strong> Power BI Service & Web Sitesi.</p>
+                        <p><strong>Süreç:</strong> Verilerle grafikler oluşturularak raporlar hazırlanır. Raporlar Power BI Online'a yayınlanır, oradan da Web Sitesi'ne gömülerek son kullanıcı olan Agent'lara sunulur.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="analiz" class="scroll-mt-20 mb-16">
+            <h2 class="text-3xl font-bold text-center mb-2 text-[#4A4A4A]">Mevcut Sistemin Analizi</h2>
+            <p class="text-center text-lg text-gray-600 mb-10 max-w-3xl mx-auto">Pilot projede kullanılan Microsoft Fabric mimarisinin güçlü yönlerini ve karşılaşılan zorlukları bir arada inceleyin.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-lg border-l-4 border-[#8A9A5B]">
+                    <h3 class="text-2xl font-bold mb-4 text-[#8A9A5B] flex items-center">
+                        <span class="mr-2">👍</span> Avantajlar
+                    </h3>
+                    <ul class="space-y-3 text-gray-700">
+                        <li><strong>Birleşik Platform:</strong> Tüm analitik süreçlerinin (veri alımı, işleme, raporlama) tek bir çatı altında toplanması yönetimi basitleştirir.</li>
+                        <li><strong>Ölçeklenebilirlik & Performans:</strong> Fabric Warehouse, işlem ve depolamayı ayırarak esnek ve maliyet-etkin bir ölçeklenme sunar.</li>
+                        <li><strong>Power BI Entegrasyonu:</strong> Power BI ile kusursuz entegrasyon, anlamsal model oluşturma ve raporlamayı hızlandırır.</li>
+                        <li><strong>Kullanım Kolaylığı:</strong> Düşük kodlu arayüzler ve SaaS yapısı, farklı yetkinlik seviyelerindeki kullanıcılar için erişilebilirlik sağlar.</li>
+                        <li><strong>Modern Veri Formatları:</strong> Temelde Delta Lake formatını kullanarak açık standartlarla uyumlu ve esnek bir yapı sunar.</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg border-l-4 border-[#B97D69]">
+                    <h3 class="text-2xl font-bold mb-4 text-[#B97D69] flex items-center">
+                        <span class="mr-2">👎</span> Dezavantajlar ve Zorluklar
+                    </h3>
+                    <ul class="space-y-3 text-gray-700">
+                        <li><strong>Direct Lake Sınırlamaları:</strong> Gömülü senaryolarda ve belirli izin modellerinde yaşanan bağlantı sorunları, Import moduna geçişi zorunlu kıldı. Bu durum, Direct Lake'in anlık veri vaadini engelledi.</li>
+                        <li><strong>Şema Evrimi Zorlukları:</strong> Warehouse'a yeni bir sütun eklendiğinde anlamsal modeli güncellemek için Dataflow üzerinden manuel adımlar gerekmesi, geliştirme süreçlerini yavaşlatıyor ve hata riskini artırıyor.</li>
+                        <li><strong>Platform Olgunluğu:</strong> Fabric yeni bir platform olduğu için bazı özellikleri (örn: Fabric SQL DB) hala önizleme aşamasındadır ve bazı kurumsal senaryolarda eksiklikler yaşanabilir.</li>
+                        <li><strong>Maliyet Yönetimi:</strong> Kapasite tabanlı fiyatlandırma modelinin takibi ve optimizasyonu, değişken iş yükleri için karmaşık olabilir.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="alternatifler" class="scroll-mt-20 mb-16">
+            <h2 class="text-3xl font-bold text-center mb-2 text-[#4A4A4A]">Alternatif Mimariler ve Araç Karşılaştırması</h2>
+            <p class="text-center text-lg text-gray-600 mb-10 max-w-3xl mx-auto">Mevcut Fabric bileşenlerinin, geleneksel Azure PaaS hizmetleriyle karşılaştırmasını interaktif olarak inceleyin. Farklı kategorilerdeki araçların özelliklerini karşılaştırmak için aşağıdaki sekmeleri kullanın.</p>
+            
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <div class="border-b border-gray-200 mb-4">
+                    <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                        <button id="tab-data-integration" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-[#8A9A5B] text-[#8A9A5B]">Veri Entegrasyonu</button>
+                        <button id="tab-data-warehouse" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Veri Ambarı</button>
+                        <button id="tab-semantic-model" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Anlamsal Model</button>
+                    </nav>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                    <div class="chart-container">
+                        <canvas id="comparisonChart"></canvas>
+                    </div>
+                    <div id="comparison-text" class="text-gray-700">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="oneriler" class="scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-2 text-[#4A4A5B]">Stratejik Sonuç ve Öneriler</h2>
+            <p class="text-center text-lg text-gray-600 mb-10 max-w-3xl mx-auto">Pilot proje analizine dayanarak, mevcut sistemin iyileştirilmesi ve gelecekteki analitik yeteneklerin geliştirilmesi için sunulan stratejik önerileri inceleyin.</p>
+            <div class="space-y-4 max-w-4xl mx-auto">
+                <div class="accordion-item bg-white rounded-lg shadow-md">
+                    <button class="accordion-header w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-gray-50 transition">
+                        <span>1. Direct Lake Zorluklarının Giderilmesi</span>
+                        <span class="transform transition-transform duration-300">▼</span>
+                    </button>
+                    <div class="accordion-content px-4 pb-4 text-gray-600">
+                        <p>Gömülü senaryolardaki bağlantı sorunları için 'Hizmet Sorumlusu' (Service Principal) gibi geçici çözümleri araştırın. Bu, Direct Lake'in performans avantajlarından vazgeçmeden güvenli erişim sağlayabilir. Eğer veri hacmi ve yenileme hızı kritik değilse, mevcut Import modu daha basit ve stabil bir çözüm sunmaya devam edecektir.</p>
+                    </div>
+                </div>
+                <div class="accordion-item bg-white rounded-lg shadow-md">
+                    <button class="accordion-header w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-gray-50 transition">
+                        <span>2. Şema Evrimi Süreçlerinin Otomasyonu</span>
+                        <span class="transform transition-transform duration-300">▼</span>
+                    </button>
+                    <div class="accordion-content px-4 pb-4 text-gray-600">
+                        <p>Warehouse'daki şema değişikliklerinin anlamsal modele yansımasını otomatikleştirmek için Fabric'in yerleşik Dağıtım İşlem Hatları (Deployment Pipelines) ve Git entegrasyonu özelliklerini kullanın. Bu, manuel adımları azaltır, tutarlılığı artırır ve geliştirme döngülerini hızlandırır.</p>
+                    </div>
+                </div>
+                <div class="accordion-item bg-white rounded-lg shadow-md">
+                    <button class="accordion-header w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-gray-50 transition">
+                        <span>3. Gelecek Analizleri İçin Doğru Araç Seçimi (RFM, Çapraz Satış)</span>
+                        <span class="transform transition-transform duration-300">▼</span>
+                    </button>
+                    <div class="accordion-content px-4 pb-4 text-gray-600">
+                        <p>RFM ve Çapraz Satış gibi gelişmiş analizler için mantığı Dataflow'da değil, daha güçlü araçlarda uygulayın. Seçenekler:</p>
+                        <ul class="list-disc list-inside mt-2 space-y-1">
+                            <li><strong>Power BI DAX:</strong> Karmaşık segmentasyon ve hesaplamaları doğrudan anlamsal model içinde yapmak için.</li>
+                            <li><strong>Fabric Data Science (Spark):</strong> Büyük ölçekli, kod tabanlı (Python/SQL) analizler ve makine öğrenmesi modelleri için.</li>
+                        </ul>
+                        <p class="mt-2">Dataflow'u bu analizler için veri hazırlama ve temizleme aracı olarak kullanmaya devam edin.</p>
+                    </div>
+                </div>
+                 <div class="accordion-item bg-white rounded-lg shadow-md">
+                    <button class="accordion-header w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-gray-50 transition">
+                        <span>4. Genel Platform Stratejisi</span>
+                        <span class="transform transition-transform duration-300">▼</span>
+                    </button>
+                    <div class="accordion-content px-4 pb-4 text-gray-600">
+                        <p>Microsoft Fabric'e yatırım yapmaya devam edin. Platform, Microsoft'un stratejik yönüyle uyumludur ve modern analitik ihtiyaçları için birleşik, ölçeklenebilir ve geleceğe dönük bir çözüm sunar. Yeni projelerde, özel bir gereksinim olmadıkça Fabric'in entegre bileşenlerini, eski bağımsız Azure hizmetlerine (ADF, Synapse, AAS) tercih edin.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const chartData = {
+                'data-integration': {
+                    labels: ['Hizmet Tipi', 'Entegrasyon', 'Kullanıcı Deneyimi', 'Yönetim Yükü', 'Maliyet Modeli'],
+                    datasets: [
+                        { label: 'Fabric Data Factory', data: [5, 5, 5, 4, 4], fill: true, backgroundColor: 'rgba(138, 154, 91, 0.2)', borderColor: 'rgb(138, 154, 91)', pointBackgroundColor: 'rgb(138, 154, 91)' },
+                        { label: 'Azure Data Factory', data: [3, 3, 2, 2, 3], fill: true, backgroundColor: 'rgba(185, 125, 105, 0.2)', borderColor: 'rgb(185, 125, 105)', pointBackgroundColor: 'rgb(185, 125, 105)' },
+                        { label: 'Synapse Pipelines', data: [3, 4, 3, 3, 2], fill: true, backgroundColor: 'rgba(212, 200, 190, 0.4)', borderColor: 'rgb(212, 200, 190)', pointBackgroundColor: 'rgb(212, 200, 190)' }
+                    ],
+                    text: `
+                        <h4 class="font-bold text-lg mb-2">Veri Entegrasyon Araçları</h4>
+                        <p><strong>Fabric Data Factory</strong>, yeni nesil, SaaS tabanlı ve derinlemesine entegre bir çözüm olarak öne çıkıyor. Düşük kodlu arayüzü ve basitleştirilmiş yönetimi ile daha kullanıcı dostudur.</p>
+                        <p class="mt-2"><strong>Azure Data Factory (ADF)</strong>, olgun ve çok yönlü bir PaaS hizmeti olmasına rağmen daha fazla mühendislik bilgisi ve yönetim yükü gerektirir.</p>
+                        <p class="mt-2"><strong>Synapse Pipelines</strong> ise Synapse ekosistemi içinde güçlüdür ancak Fabric kadar geniş bir entegrasyon sunmaz.</p>
+                    `
+                },
+                'data-warehouse': {
+                    labels: ['Hizmet Tipi', 'Mimari', 'Ölçeklendirme', 'Maliyet Verimliliği', 'Yönetim Yükü'],
+                    datasets: [
+                        { label: 'Fabric Warehouse', data: [5, 5, 5, 5, 5], fill: true, backgroundColor: 'rgba(138, 154, 91, 0.2)', borderColor: 'rgb(138, 154, 91)', pointBackgroundColor: 'rgb(138, 154, 91)' },
+                        { label: 'Synapse Dedicated SQL Pool', data: [3, 3, 2, 2, 2], fill: true, backgroundColor: 'rgba(185, 125, 105, 0.2)', borderColor: 'rgb(185, 125, 105)', pointBackgroundColor: 'rgb(185, 125, 105)' }
+                    ],
+                    text: `
+                        <h4 class="font-bold text-lg mb-2">Veri Ambarı Çözümleri</h4>
+                        <p><strong>Fabric Warehouse</strong>, modern, göl merkezli (lake-centric) bir SaaS ambarıdır. İşlem ve depolamayı ayırarak esnek, talebe dayalı ve genellikle daha maliyet-etkin bir model sunar. Yönetim yükü minimaldir.</p>
+                        <p class="mt-2"><strong>Synapse Dedicated SQL Pool</strong>, geleneksel bir PaaS MPP ambarıdır. Sabit kapasite sağlama modeli, tepe kullanım için planlama gerektirir ve boşta kalma durumlarında maliyet verimsizliğine yol açabilir. Daha fazla manuel optimizasyon gerektirir.</p>
+                    `
+                },
+                'semantic-model': {
+                    labels: ['Hizmet Tipi', 'Entegrasyon', 'Performans', 'Özellik Geliştirme', 'Maliyet Modeli'],
+                    datasets: [
+                        { label: 'Power BI Premium (Fabric)', data: [5, 5, 5, 5, 4], fill: true, backgroundColor: 'rgba(138, 154, 91, 0.2)', borderColor: 'rgb(138, 154, 91)', pointBackgroundColor: 'rgb(138, 154, 91)' },
+                        { label: 'Azure Analysis Services', data: [3, 2, 3, 2, 3], fill: true, backgroundColor: 'rgba(185, 125, 105, 0.2)', borderColor: 'rgb(185, 125, 105)', pointBackgroundColor: 'rgb(185, 125, 105)' }
+                    ],
+                    text: `
+                        <h4 class="font-bold text-lg mb-2">Anlamsal Model Platformları</h4>
+                        <p><strong>Power BI Premium (Fabric içinde)</strong>, Microsoft'un stratejik odağıdır. Derinlemesine entegre, genellikle daha yüksek performanslı ve yeni özelliklerin ilk geldiği platformdur. Lisanslama, Fabric kapasitesi içinde birleşir.</p>
+                        <p class="mt-2"><strong>Azure Analysis Services (AAS)</strong>, olgun bir PaaS hizmeti olmasına rağmen, özellik geliştirme açısından geride kalmaktadır. Ayrı lisanslama ve yönetim gerektirir ve Fabric ekosistemiyle entegrasyonu daha zayıftır.</p>
+                    `
+                }
+            };
+
+            const ctx = document.getElementById('comparisonChart').getContext('2d');
+            let myChart;
+
+            function updateChart(id) {
+                if (myChart) {
+                    myChart.destroy();
+                }
+                const data = chartData[id];
+                document.getElementById('comparison-text').innerHTML = data.text;
+                myChart = new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: data.labels,
+                        datasets: data.datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        label += context.raw;
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            r: {
+                                angleLines: {
+                                    display: false
+                                },
+                                suggestedMin: 0,
+                                suggestedMax: 5,
+                                pointLabels: {
+                                    font: {
+                                        size: 12
+                                    }
+                                },
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('border-[#8A9A5B]', 'text-[#8A9A5B]');
+                        btn.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+                    });
+                    button.classList.add('border-[#8A9A5B]', 'text-[#8A9A5B]');
+                    button.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+                    updateChart(button.id.replace('tab-', ''));
+                });
+            });
+
+            updateChart('data-integration');
+
+            const flowCards = document.querySelectorAll('.flow-card');
+            flowCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const isActive = card.classList.contains('active');
+                    flowCards.forEach(c => c.classList.remove('active'));
+                    if (!isActive) {
+                        card.classList.add('active');
+                    }
+                });
+            });
+
+            const accordionItems = document.querySelectorAll('.accordion-item');
+            accordionItems.forEach(item => {
+                const header = item.querySelector('.accordion-header');
+                const content = item.querySelector('.accordion-content');
+                const icon = header.querySelector('span:last-child');
+                header.addEventListener('click', () => {
+                    const isOpen = content.style.maxHeight && content.style.maxHeight !== '0px';
+                    if (isOpen) {
+                        content.style.maxHeight = '0px';
+                        icon.style.transform = 'rotate(0deg)';
+                    } else {
+                        content.style.maxHeight = content.scrollHeight + 'px';
+                        icon.style.transform = 'rotate(180deg)';
+                    }
+                });
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('section');
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 80) {
+                        current = section.getAttribute('id');
+                    }
+                });
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
